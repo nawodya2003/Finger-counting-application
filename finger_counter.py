@@ -6,8 +6,8 @@ cap = cv2.VideoCapture(0)
 
 # 2. අත හඳුනාගන්න MediaPipe සූදානම් කිරීම ✋
 mpHands = mp.solutions.hands
-# මෙතන max_num_hands=1 දුන්නම එක අතක් විතරක් අල්ලගන්නවා, ඒ නිසා හරියටම 5 ට සීමා වෙනවා.
-hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.7) 
+# අත් දෙකම හඳුනාගෙන ඇඟිලි 0 සිට 10 දක්වා ගණන් කරනවා.
+hands = mpHands.Hands(max_num_hands=2, min_detection_confidence=0.7)
 mpDraw = mp.solutions.drawing_utils
 
 # 3. අනිත් ඇඟිලි 4 හි මුදුනේ තියෙන ලක්ෂ්‍ය වල අංක (දබර, මැද, වෙද, සුලැඟිල්ල)
@@ -29,7 +29,7 @@ while True:
 
     # අතක් අඳුරගත්තොත් විතරක් මේ ටික වෙනවා ✅
     if results.multi_hand_landmarks:
-        for handLms in results.multi_hand_landmarks:
+        for handIndex, handLms in enumerate(results.multi_hand_landmarks):
             # අතේ තිත් ටිකයි ඉරි ටිකයි රූපයේ අඳින්න ✍️
             mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 
@@ -42,7 +42,13 @@ while True:
             if len(lmList) != 0:
                 # 1. මාපටැඟිල්ල (Thumb) වෙනම චෙක් කරනවා 👍
                 # මාපටැඟිල්ලේ මුදුන ඊට පහළින් තියෙන හන්දියට වඩා එළියෙන් තියෙනවද බලනවා
-                if lmList[4][1] > lmList[3][1]:
+                handLabel = results.multi_handedness[handIndex].classification[0].label
+                thumbIsUp = (
+                    lmList[4][1] < lmList[3][1]
+                    if handLabel == "Right"
+                    else lmList[4][1] > lmList[3][1]
+                )
+                if thumbIsUp:
                     fingers.append(1) # ඇඟිල්ල දිගෑරලා
                 else:
                     fingers.append(0) # ඇඟිල්ල නවල
